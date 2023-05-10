@@ -7,7 +7,8 @@ public class RandomItemSpawner : MonoBehaviour
 {
     public enum EMode
     {
-        Mode_2D
+        Mode_2D,
+        Mode_3D
     };
 
     [SerializeField] EMode Mode = EMode.Mode_2D;
@@ -18,6 +19,7 @@ public class RandomItemSpawner : MonoBehaviour
     [SerializeField] float MaxRadius = 2f;
 
     [SerializeField] UnityEvent<Rect> On2DBoundsCalculated = new();
+    [SerializeField] UnityEvent<Bounds> On3DBoundsCalculated = new();
 
     [SerializeField] UnityEvent<GameObject> OnItemSpawned = new();
     [SerializeField] UnityEvent<List<GameObject>> OnAllItemsSpawned = new();
@@ -56,6 +58,26 @@ public class RandomItemSpawner : MonoBehaviour
 
                 var NewGO = GameObject.Instantiate(PrefabToSpawn, SpawnPos, Quaternion.identity);
                 NewGO.transform.localScale = new Vector3(Radius, 1f, Radius);
+                NewGO.transform.SetParent(SpawnZone.transform);
+
+                Items.Add(NewGO);
+                OnItemSpawned.Invoke(NewGO);
+            }
+        }
+        else if (Mode == EMode.Mode_3D)
+        {
+            On3DBoundsCalculated.Invoke(SpawnBounds);
+
+            for (int index = 0; index < NumToSpawn; ++index)
+            {
+                Vector3 SpawnPos = new Vector3(Random.Range(SpawnBounds.min.x, SpawnBounds.max.x),
+                                               Random.Range(SpawnBounds.min.y, SpawnBounds.max.y),
+                                               Random.Range(SpawnBounds.min.z, SpawnBounds.max.z));
+
+                float Radius = Random.Range(MinRadius, MaxRadius);
+
+                var NewGO = GameObject.Instantiate(PrefabToSpawn, SpawnPos, Quaternion.identity);
+                NewGO.transform.localScale = new Vector3(Radius, Radius, Radius);
                 NewGO.transform.SetParent(SpawnZone.transform);
 
                 Items.Add(NewGO);
